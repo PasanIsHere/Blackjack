@@ -12,7 +12,7 @@ so they can keep playing if they want to. This procces can repeat for the amount
 var dealerAceCount = 0; 
 var yourAceCount = 0;
 
-var dealerHidden; //hidden card of the dealer
+var hidden; //hidden card of the dealer
 
 var canHit = true;//let's the player(you) hit while their sum <=21
 
@@ -22,16 +22,7 @@ window.onload= function(){
     startGame();
     console.log(hidden);
     console.log(dealerSum);
-    while(dealerSum < 17){ //Dealer Game Logic if they have < 17 score they must draw.
-        let cardImg = document.createElement("img") //creating an image tage
-        let card = deck.pop();
-        cardImg.src = "./cards/"+ card +".png";
-        dealerSum += getValue(card);
-        dealerAceCount += checkAce(card);
-        document.getElementById("dealer-cards").append(cardImg);
 
-    }
-    console.log(dealerSum);
 }
 
 function createDeck(){
@@ -61,6 +52,8 @@ function shuffleDeck() {
         [deck[i], deck[j]] = [deck[j], deck[i]];
     }
     console.log(deck);
+
+    
 }
 
 function startGame(){
@@ -68,8 +61,88 @@ function startGame(){
     dealerSum += getValue(hidden);
     
     dealerAceCount  += checkAce(hidden);
+    drawCard(0);
+
+    console.log(dealerSum);
+
+    for (let i = 0; i< 2; i++){
+        drawCard(1);
+    }
+    console.log(yourSum);
+
+    document.getElementById("hit").addEventListener("click",hit);
+    document.getElementById("stand").addEventListener("click",stand);
+
+
 }
 
+function drawCard(player){
+    let cardImg = document.createElement("img") //creating an image tage
+    let card = deck.pop();
+    cardImg.src = "./cards/"+ card +".png";
+
+    if (player == 0){
+        dealerSum += getValue(card);
+        dealerAceCount += checkAce(card);
+        document.getElementById("dealer-cards").append(cardImg);
+        return;
+    }
+
+    yourSum += getValue(card);
+    yourAceCount += checkAce(card);
+    document.getElementById("your-cards").append(cardImg);
+    return;
+}
+function reduceAce(playerSum,playerAceCount){
+    while(playerSum>21 && playerAceCount> 0){
+        playerSum -= 10;
+        playerAceCount -= 1;
+
+    }
+    return playerSum;
+}
+function hit(){
+    if(!canHit){
+        return;
+    }
+    drawCard(1);
+    if(reduceAce(yourSum,yourAceCount)>21){
+        canHit = false;
+    }
+}
+
+function stand(){
+    while(dealerSum < 17){ //Dealer Game Logic if they have < 17 score they must draw.
+        drawCard(0);
+    }
+    dealerSum = reduceAce(dealerSum,dealerAceCount);
+    yourSum = reduceAce(yourSum, yourAceCount);
+
+    canHit = false;
+    document.getElementById("hidden").src = "./cards/" + hidden + ".png";
+
+    let message = "";
+    if (yourSum > 21) {
+        message = "You Lose!";
+    }
+    else if (dealerSum > 21) {
+        message = "You win!";
+    }
+    //both you and dealer <= 21
+    else if (yourSum == dealerSum) {
+        message = "Tie!";
+    }
+    else if (yourSum > dealerSum) {
+        message = "You Win!";
+    }
+    else if (yourSum < dealerSum) {
+        message = "You Lose!";
+    }
+
+    document.getElementById("dealer-sum").innerText = dealerSum;
+    document.getElementById("your-sum").innerText = yourSum;
+    document.getElementById("results").innerText = message;
+}
 function getValue(card){
     let data = card.split("-") //card format is 'value-type', splitting by '-' , data[0] will hold value, data[1] will hold the type
     let value = data[0];
